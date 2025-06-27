@@ -1,65 +1,45 @@
 #include <vector>
 #include <limits.h> // For INT_MAX
 #include <iostream>
+#include <queue>
 using namespace std;
 
-class Edge {
-    public:
-    int source;
-    int dest;
-    int time;
-    Edge(int s, int d, int t) : source(s), dest(d), time(t) {}
-};
 class Solution {
 public:
     int networkDelayTime(vector<vector<int>>& times, int n, int k) {
-        
-        //Initialize a n x n grid which contain infinity values for the time among each other
-        vector<vector<int>> grid(n, vector<int>(n, INT_MAX));
-
-        int edgeCount = times.size();
-        //Insert each time into the grid by calling a recursive function
-        for(int i=0; i<edgeCount; i++) {
-            auto time = times[i];
-            insertEdge(Edge(time[0]-1, time[1]-1, time[2]), grid);  //0-based indexing is used
+        vector<vector<pair<int, int>>> graph(n + 1);
+        for (auto& edge : times) {
+            int u = edge[0], v = edge[1], w = edge[2];
+            graph[u].emplace_back(v, w);
         }
 
-        //Return -1 for those cells which contain INT_MAX, except the cells at [i][i]
-        int minTotalTime = -1;
-        k--; //We use 0-based
-        for (int i=0; i<n; i++) {
-            if (i==k) continue;
-            if (grid[k][i] == INT_MAX) return -1;
+        // Min-heap: (time, node)
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
+        vector<int> dist(n + 1, INT_MAX);
+        dist[k] = 0;
+        pq.emplace(0, k);
 
-            if (grid[k][i] > minTotalTime) minTotalTime = grid[k][i];
+        while (!pq.empty()) {
+            auto [currTime, u] = pq.top();
+            pq.pop();
+
+            if (currTime > dist[u]) continue;  // Skip outdated entry
+
+            for (auto& [v, weight] : graph[u]) {
+                if (dist[u] + weight < dist[v]) {
+                    dist[v] = dist[u] + weight;
+                    pq.emplace(dist[v], v);
+                }
+            }
         }
 
-        return minTotalTime;
-    }
-
-    //Recursive function
-    void insertEdge (Edge e, vector<vector<int>>& grid) {
-        //If the new time is not shorter than the current one, don't proceed
-        if (e.time >= grid[e.source][e.dest]) return;
-
-        //Replace the recorded time with e.time
-        grid[e.source][e.dest] = e.time;
-
-        //Traverse all the valid incoming edges inEdges to e.source and form a new edge prevEdge {inEdges[i].source, e.source, inEdges[i].time + e.time}
-        for (int i=0; i<grid.size(); i++) {
-            if (grid[i][e.source] == INT_MAX) continue;
-
-            Edge prevEdge(i, e.dest, grid[i][e.source] + e.time);
-            insertEdge(prevEdge, grid);
+        int maxDelay = 0;
+        for (int i = 1; i <= n; ++i) {
+            if (dist[i] == INT_MAX) return -1;  // Unreachable node
+            maxDelay = max(maxDelay, dist[i]);
         }
 
-        //Traverse all the valid outgoing edges outEdges from e.dest and form a new edge nextEdge {e.source, outEdges[i].dest, e.time + outEdges[i].time}
-        for (int i=0; i<grid.size(); i++) {
-            if (grid[e.dest][i] == INT_MAX) continue;
-
-            Edge nextEdge(e.source, i, e.time + grid[e.dest][i]);
-            insertEdge(nextEdge, grid);
-        }
+        return maxDelay;
     }
 };
 
