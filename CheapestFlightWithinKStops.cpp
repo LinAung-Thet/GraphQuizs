@@ -3,48 +3,41 @@
 #include <iostream>
 using namespace std;
 
-class Dest {
-    public: 
-    int price;
-    int numStops;
-    Dest(int p, int n) : price(p), numStops(n) {}
-};
 class Solution {
 public:
     int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
-        vector<vector<pair<int, int>>> graph(n + 1);
+        // Build adjacency list
+        vector<vector<pair<int, int>>> graph(n);
         for (auto& flight : flights) {
-            int fm = flight[0], to = flight[1], w = flight[2];
-            graph[fm].emplace_back(to, w);
+            int u = flight[0], v = flight[1], w = flight[2];
+            graph[u].emplace_back(v, w);
         }
 
-        // Min-heap: (Dest, node)
-        auto cmp = [](pair<Dest, int> a, pair<Dest, int> b) {return (a.first.price > b.first.price);};
-        priority_queue<pair<Dest, int>, vector<pair<Dest, int>>, decltype(cmp)> pq(cmp);
-        vector<Dest> dest(n + 1, Dest(INT_MAX, -1));
-        dest[src] = Dest(0, -1);
-        pq.emplace(Dest(0, -1), src);
+        // Priority queue: (cost so far, current node, stops used)
+        priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>, greater<>> pq;
+        pq.emplace(0, src, 0);
+
+        // Visited array to store [city][stops] → cost
+        vector<vector<int>> dist(n, vector<int>(k + 2, INT_MAX));
+        dist[src][0] = 0;
 
         while (!pq.empty()) {
-            auto [currDest, fm] = pq.top();
+            auto [cost, node, stops] = pq.top();
             pq.pop();
 
-            if (currDest.price > dest[fm].price || dest[fm].numStops >= k) {
-                n = n;
-                continue;  // Skip outdated entry
-            }
+            if (node == dst) return cost;
+            if (stops > k) continue;
 
-            for (auto& [to, price] : graph[fm]) {
-                if (dest[fm].price + price < dest[to].price) {
-                    dest[to].price = dest[fm].price + price;
-                    dest[to].numStops = dest[fm].numStops + 1;
-                    pq.emplace(dest[to], to);
+            for (auto& [neighbor, price] : graph[node]) {
+                int nextCost = cost + price;
+                if (nextCost < dist[neighbor][stops + 1]) {
+                    dist[neighbor][stops + 1] = nextCost;
+                    pq.emplace(nextCost, neighbor, stops + 1);
                 }
             }
         }
 
-        if (dest[dst].price == INT_MAX || dest[dst].numStops > k) return -1;  // Unreachable node
-        return dest[dst].price;
+        return -1;  // Destination unreachable within k stops
     }
 };
 
@@ -73,6 +66,4 @@ int main() {
     k = 1;
     result = solution.findCheapestPrice(n, flights, src, dst, k);
     cout << "Cheapest Price: " << result << " Expected output: 6" << endl;
-
-    return 0;
 }
