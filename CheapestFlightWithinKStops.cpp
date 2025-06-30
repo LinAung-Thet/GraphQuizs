@@ -6,48 +6,38 @@ using namespace std;
 class Solution {
 public:
     int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
-        vector<vector<pair<int, int>>> adj(n);
-        for (auto flight : flights) {
-            adj[flight[0]].push_back({flight[1], flight[2]});
+        // Build adjacency list
+        vector<vector<pair<int, int>>> graph(n);
+        for (auto& flight : flights) {
+            int u = flight[0], v = flight[1], w = flight[2];
+            graph[u].emplace_back(v, w);
         }
 
-        // the steps increase by unit at a time so no need of priority_queue
+        // Priority queue: (cost so far, current node, stops used)
+        priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>, greater<>> pq;
+        pq.emplace(0, src, -1);
 
-        // {steps , {node , dist}}
-        queue<pair<int, pair<int, int>>> q;
+        // Visited array to store [city][stops] → cost
+        vector<vector<int>> dist(n, vector<int>(k + 2, INT_MAX));
+        dist[src][0] = 0;
 
-        vector<int> dist(n, INT_MAX);
-        dist[src] = 0;
+        while (!pq.empty()) {
+            auto [cost, node, stops] = pq.top();
+            pq.pop();
 
-        q.push({0, {src, 0}});
+            if (node == dst) return cost;
+            if (stops >= k) continue;
 
-        while (!q.empty()) {
-            int step = q.front().first;
-            int node = q.front().second.first;
-            int d = q.front().second.second;
-            q.pop();
-
-            // dont proceed further if the steps are more the k
-            if (step > k) {
-                continue;
-            }
-
-            for (auto n : adj[node]) {
-                int adjNode = n.first;
-                int adjDist = n.second;
-
-                if (d + adjDist < dist[adjNode] && step <= k) {
-                    dist[adjNode] = d + adjDist;
-                    q.push({step + 1, {adjNode, dist[adjNode]}});
+            for (auto& [neighbor, price] : graph[node]) {
+                int nextCost = cost + price;
+                if (nextCost < dist[neighbor][stops + 1]) {
+                    dist[neighbor][stops + 1] = nextCost;
+                    pq.emplace(nextCost, neighbor, stops + 1);
                 }
             }
         }
 
-        if (dist[dst] == INT_MAX) {
-            return -1;
-        } else {
-            return dist[dst];
-        }
+        return -1;  // Destination unreachable within k stops
     }
 };
 
