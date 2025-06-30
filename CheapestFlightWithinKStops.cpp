@@ -14,30 +14,32 @@ public:
         }
 
         // Priority queue: (cost so far, current node, stops used)
-        priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>, greater<>> pq;
+        queue<tuple<int, int, int>> pq;
         pq.emplace(0, src, -1);
 
         // Visited array to store [city][stops] → cost
-        vector<vector<int>> dist(n, vector<int>(k + 2, INT_MAX));
-        dist[src][0] = 0;
+        vector<int> dist(n, INT_MAX);
+        dist[src] = 0;
 
         while (!pq.empty()) {
-            auto [cost, node, stops] = pq.top();
+            auto [cost, node, stops] = pq.front();
             pq.pop();
 
-            if (node == dst) return cost;
+            // if (node == dst) return cost;
             if (stops >= k) continue;
 
             for (auto& [neighbor, price] : graph[node]) {
                 int nextCost = cost + price;
-                if (nextCost < dist[neighbor][stops + 1]) {
-                    dist[neighbor][stops + 1] = nextCost;
+                if (nextCost < dist[neighbor]) {
+                    dist[neighbor] = nextCost;
                     pq.emplace(nextCost, neighbor, stops + 1);
                 }
             }
         }
 
-        return -1;  // Destination unreachable within k stops
+        // return -1;  // Destination unreachable within k stops
+
+        return dist[dst] == INT_MAX ? -1 : dist[dst];
     }
 };
 
@@ -58,6 +60,14 @@ int main() {
     k = 0;
     result = solution.findCheapestPrice(n, flights, src, dst, k);
     cout << "Cheapest Price: " << result << " Expected output: 500" << endl;
+
+    flights = {{0,1,100},{1,2,100},{0,2,500}};
+    n = 3;
+    src = 0;
+    dst = 2;
+    k = 1;
+    result = solution.findCheapestPrice(n, flights, src, dst, k);
+    cout << "Cheapest Price: " << result << " Expected output: 200" << endl;
 
     flights = {{0,1,1},{0,2,5},{1,2,1},{2,3,1}};
     n = 4;
