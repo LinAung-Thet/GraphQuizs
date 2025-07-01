@@ -6,53 +6,28 @@ using namespace std;
 
 class Solution {
 public:
+    void dfs(int city, const vector<vector<int>>& isConnected, vector<bool>& visited) {
+        visited[city] = true;
+        for (int neighbor = 0; neighbor < isConnected.size(); ++neighbor) {
+            if (isConnected[city][neighbor] == 1 && !visited[neighbor]) {
+                dfs(neighbor, isConnected, visited);
+            }
+        }
+    }
+
     int findCircleNum(vector<vector<int>>& isConnected) {
-        // Build the graph and outdegree vector
         int n = isConnected.size();
-        unordered_map<int, vector<int>> graph;
-        unordered_map<int,int> inoutDegree;
-        for(int i=0; i<n; i++) {
-            int row = i + 1;
-            for(int j=0; j<n; j++) {
-                int col = j + 1;
-                if(i == j) continue; // Skip self-loops
-                if(!isConnected[i][j]) continue;
-                
-                inoutDegree[row]++;
-                graph[row].push_back(col);
+        vector<bool> visited(n, false);
+        int provinces = 0;
+
+        for (int city = 0; city < n; ++city) {
+            if (!visited[city]) {
+                dfs(city, isConnected, visited);
+                provinces++;
             }
         }
 
-        // Traverse the outdegree vector and update the visited vector
-        vector<bool> visited(n+1, false);
-        int numProvince = 0;
-        queue<int> connectedNodes;
-        int numConnectedNode = inoutDegree.size();
-        for (int i=1; i<=numConnectedNode; i++) {
-            if (visited[i]) continue;
-            if(inoutDegree[i] == 0) {
-                // If the outdegree is 0, it is a separate province
-                continue;
-            }
-            numProvince++;
-
-            // If the outdegreee is > 0, find its connections
-            connectedNodes.push(i);
-
-            while (!connectedNodes.empty()) {
-                int curNode = connectedNodes.front(); connectedNodes.pop();
-                if(visited[curNode]) continue;
-                visited[curNode] = true;
-
-                for(auto next: graph[curNode]) {
-                    if(visited[next]) continue; // Skip if already visited
-                    // Add its connected nodes to the queue unless they are visited
-                    connectedNodes.push(next);
-                }
-            }
-        }
-
-        return n - numConnectedNode + numProvince;
+        return provinces;
     }
 };
 int main() {
