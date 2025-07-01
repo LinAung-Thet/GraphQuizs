@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "iostream": "cpp",
-        "xlocale": "cpp"
+        "xlocale": "cpp",
+        "vector": "cpp",
+        "unordered_map": "cpp"
     }
 }
