@@ -6,45 +6,40 @@
 #include <iostream>
 using namespace std;
 
-class Solution {
+class UnionFind {
 public:
-    void dfs(int city, const vector<vector<int>>& isConnected, vector<bool>& visited) {
-        visited[city] = true;
-        for (int neighbor = 0; neighbor < isConnected.size(); ++neighbor) {
-            if (isConnected[city][neighbor] == 1 && !visited[neighbor]) {
-                dfs(neighbor, isConnected, visited);
-            }
-        }
+    unordered_map<int, int> parent;
+
+    int find(int x) {
+        if (!parent.count(x))
+            parent[x] = x;
+        if (parent[x] != x)
+            parent[x] = find(parent[x]);
+        return parent[x];
     }
 
+    void unite(int x, int y) {
+        parent[find(x)] = find(y);
+    }
+};
+
+class Solution {
+public:
     int removeStones(vector<vector<int>>& stones) {
-        // Construct a connection graph
-        int n = stones.size();
-        vector<vector<int>> isConnected(n, vector<int>(n, 0));;
-        for(int i=0; i<n; i++) {
-            for(int j=i+1; j<n; j++) {
-                // If two stones are in the same row or column, they are connected
-                if(stones[i][0] == stones[j][0] || stones[i][1] == stones[j][1]) {
-                    isConnected[i][j] = 1;
-                    isConnected[j][i] = 1;
-                }
-            }   
+        UnionFind uf;
+        for (auto& stone : stones) {
+            int row = stone[0];
+            int col = ~(stone[1]);  // flip column bits to distinguish from rows
+            uf.unite(row, col);
         }
 
-        vector<bool> visited(n, false);
-        int groups = 0;
-
-        // Count the number of connected stones
-        for (int stone = 0; stone < n; ++stone) {
-            if (!visited[stone]) {
-                dfs(stone, isConnected, visited);
-                groups++;
-            }
+        unordered_map<int, int> uniqueRoots;
+        for (auto& stone : stones) {
+            int root = uf.find(stone[0]);
+            uniqueRoots[root]++;
         }
 
-        // The maximum number of stones that can be removed is total stones minus the number of groups
-        // Each group can keep one stone, so we can remove all others in that group
-        return n - groups;
+        return stones.size() - uniqueRoots.size();
     }
 };
 int main() {
