@@ -6,10 +6,8 @@
 using namespace std;
 class Solution {
 public:
-    void dfs(int& numWays, int& minTime, int& n, pair<int, int> node, queue<pair<int, int>>& q, vector<vector<pair<int, int>>>& graph) {
-        q.emplace(node);
-
-        auto [curN,curT] = q.front(); q.pop();
+    void dfs(int& numWays, int& minTime, int& n, pair<int, int> node, vector<vector<pair<int, int>>>& graph) {
+        auto [curN, curT] = node;
         if(curN == n-1) {
             if(curT <= minTime) {
                 if(curT < minTime) {
@@ -18,13 +16,12 @@ public:
                 }
                 numWays++;
             }
+            return; // Reached destination node
         }
-        else {
-            for(auto [d,t]: graph[curN]) {
-                if(curT + t > minTime) continue; // Skip paths that exceed the minimum time found so far
-                node = pair(d,t+curT);
-                dfs(numWays, minTime, n, node, q, graph);
-            }
+
+        for(auto [d,t]: graph[curN]) {
+            if(curT + t > minTime) continue; // Skip paths that exceed the minimum time found so far
+            dfs(numWays, minTime, n, {d, t+curT}, graph);
         }
     }
     int countPaths(int n, vector<vector<int>>& roads) {
@@ -39,10 +36,7 @@ public:
             graph[road[1]].push_back(pair(road[0],road[2]));
         }
 
-        queue<pair<int, int>> q;
-        pair<int, int> node(0, 0); // Start from node 0 with time 0
-
-        dfs(numWays, minTime, n, node, q, graph);
+        dfs(numWays, minTime, n, {0,0}, graph);
 
         return numWays;
     }
