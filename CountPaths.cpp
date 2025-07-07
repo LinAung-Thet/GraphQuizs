@@ -4,50 +4,53 @@
 #include<iostream>
 #include<queue>
 #include<chrono>
+#include<cstring>
 using namespace std;
 using namespace chrono;
+
+const int mod=1e9+7;
+using int2=pair<unsigned long long, int>;
+vector<int2> adj[200];
 class Solution {
 public:
-    int countPaths(int n, vector<vector<int>>& roads) {
-        const int MOD = 1e9 + 7;
-        using pii = pair<long long, int>; // (time, node)
-        vector<vector<pair<int, int>>> graph(n);
-        
-        // Build the graph
-        for (auto& road : roads) {
-            int u = road[0], v = road[1], time = road[2];
-            graph[u].emplace_back(v, time);
-            graph[v].emplace_back(u, time);
-        }
-
-        // Dijkstra initialization
-        priority_queue<pii, vector<pii>, greater<>> pq;
-        vector<long long> dist(n, LLONG_MAX);
-        vector<int> ways(n, 0);
-        
-        pq.emplace(0, 0); // (time, node)
-        dist[0] = 0;
-        ways[0] = 1;
-
-        while (!pq.empty()) {
-            auto [time, node] = pq.top(); pq.pop();
-            
-            if (time > dist[node]) continue; // Already found shorter path
-
-            for (auto& [nei, t] : graph[node]) {
-                long long newTime = time + t;
-
-                if (newTime < dist[nei]) {
-                    dist[nei] = newTime;
-                    ways[nei] = ways[node];
-                    pq.emplace(newTime, nei);
-                } else if (newTime == dist[nei]) {
-                    ways[nei] = (ways[nei] + ways[node]) % MOD;
+    unsigned long long dijkstra(int start, int n, unsigned long long* dist){
+        unsigned long long way[n];
+        memset(way, 0, sizeof(way));
+        priority_queue<int2, vector<int2>, greater<int2>> pq;
+        pq.emplace(0, start);
+        dist[start]=0;
+        way[start]=1;
+        while(!pq.empty()){
+            auto [d0, i]=pq.top();
+            pq.pop();
+            for(auto [d2, j]:adj[i]){
+                unsigned long long newD=d0+d2;
+                if (newD<dist[j]){// path thru i, j
+                    dist[j]=newD;
+                    way[j]=way[i];
+                    pq.emplace(newD, j);
+                }
+                else if( newD==dist[j]){
+                    way[j]+=way[i]; // paths thru i & not thru i
+                    way[j]%=mod;
                 }
             }
         }
-
-        return ways[n - 1];
+        return way[n-1];
+    }
+    int countPaths(int n, vector<vector<int>>& roads) {
+        for(int i=0; i<n; i++)
+            adj[i].clear();
+            
+        for (auto& e: roads){
+            int u=e[0], v=e[1];
+            unsigned long long time=e[2];
+            adj[u].emplace_back(time, v);
+            adj[v].emplace_back(time, u);
+        }
+        unsigned long long dist[200];
+        fill(dist, dist+n, ULLONG_MAX);
+        return dijkstra(0, n, dist);
     }
 };
 
@@ -86,6 +89,6 @@ int main() {
     auto duration = duration_cast<microseconds>(endTime - startTime);
 
     cout << "Execution time: " << duration.count() << " microseconds" << endl;
-    
+
     return 0;
 }
