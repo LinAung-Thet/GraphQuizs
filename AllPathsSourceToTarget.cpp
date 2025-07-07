@@ -5,41 +5,28 @@
 using namespace std;
 class Solution {
 public:
-    void dfs(vector<vector<int>>& graph, vector<vector<vector<int>>>& paths, int node) {
-        if(node == graph.size() - 1) {
-            // If we reach the last node, we have found a valid path
-            return;
-        }   
+    void dfs(int node, vector<vector<int>>& graph, vector<int>& path, vector<vector<int>>& result) {
+        path.push_back(node);
 
-        // vector<vector<int>> buffer;
-        for(int i=0; i<paths[node].size(); i++) {
-            for(auto& next : graph[node]) {
-                // Duplicate the current path according to the number of outgoing edges from the current node
-                paths[next].push_back(paths[node][i]);
-
-                // Append the next node to the current path
-                paths[next][paths[next].size() - 1].push_back(next);
-
-                dfs(graph, paths, next);
+        if (node == graph.size() - 1) {
+            result.push_back(path); // Reached target
+        } else {
+            for (int next : graph[node]) {
+                dfs(next, graph, path, result);
             }
         }
+
+        path.pop_back(); // Backtrack
     }
 
     vector<vector<int>> allPathsSourceTarget(vector<vector<int>>& graph) {
-        int n = graph.size();
-        vector<vector<vector<int>>> paths(n, vector<vector<int>>());
-        paths[0].push_back({0}); // Start with the source node
-        dfs(graph, paths, 0);
-
-        vector<vector<int>> uniquePaths;
-        for(auto& path: paths[n-1]) {
-            if(find(uniquePaths.begin(), uniquePaths.end(), path) == uniquePaths.end()) {
-                uniquePaths.push_back(path);
-            }
-        }   
-        return uniquePaths;
+        vector<vector<int>> result;
+        vector<int> path;
+        dfs(0, graph, path, result);
+        return result;
     }
 };
+
 // Example usage
 int main() {
     Solution solution;
