@@ -3,7 +3,9 @@
 #include<vector>
 #include<iostream>
 #include<queue>
+#include<chrono>
 using namespace std;
+using namespace chrono;
 class Solution {
 public:
     int countPaths(int n, vector<vector<int>>& roads) {
@@ -54,6 +56,8 @@ int main() {
     vector<vector<int>> roads;
     int n, result;
 
+    auto startTime = high_resolution_clock::now();
+
     // Test 1
     n = 7;
     roads = {{0,6,7},{0,1,2},{1,2,3},{1,3,3},{6,3,3},{3,5,1},{6,5,1},{2,5,1},{0,4,5},{4,6,2}};
@@ -77,5 +81,11 @@ int main() {
              {2,11,42185},{11,3,32557},{1,11,45037}};
     result = solution.countPaths(n, roads);
     cout << "Number of ways to arrive at destination: " << result << ", Expected: " << endl; // Expected output: 4
+    
+    auto endTime = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(endTime - startTime);
+
+    cout << "Execution time: " << duration.count() << " microseconds" << endl;
+    
     return 0;
 }
