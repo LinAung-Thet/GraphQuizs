@@ -6,39 +6,46 @@
 using namespace std;
 class Solution {
 public:
-    void dfs(int& numWays, int& minTime, int& n, pair<int, int> node, vector<vector<pair<int, int>>>& graph) {
-        auto [curN, curT] = node;
-        if(curN == n-1) {
-            if(curT <= minTime) {
-                if(curT < minTime) {
-                    minTime = curT;
-                    numWays = 0;
-                }
-                numWays++;
-            }
-            return; // Reached destination node
-        }
-
-        for(auto [d,t]: graph[curN]) {
-            if(curT + t > minTime) continue; // Skip paths that exceed the minimum time found so far
-            dfs(numWays, minTime, n, {d, t+curT}, graph);
-        }
-    }
     int countPaths(int n, vector<vector<int>>& roads) {
-        int numWays = 0;
-        int minTime = INT_MAX;
-        vector<bool> visited(n,false);
-
-        //Build the connected graph: vector of pair(dest, time) at each index for the source 
+        const int MOD = 1e9 + 7;
+        using pii = pair<long long, int>; // (time, node)
         vector<vector<pair<int, int>>> graph(n);
-        for(auto& road: roads) {
-            graph[road[0]].push_back(pair(road[1],road[2]));
-            graph[road[1]].push_back(pair(road[0],road[2]));
+        
+        // Build the graph
+        for (auto& road : roads) {
+            int u = road[0], v = road[1], time = road[2];
+            graph[u].emplace_back(v, time);
+            graph[v].emplace_back(u, time);
         }
 
-        dfs(numWays, minTime, n, {0,0}, graph);
+        // Dijkstra initialization
+        priority_queue<pii, vector<pii>, greater<>> pq;
+        vector<long long> dist(n, LLONG_MAX);
+        vector<int> ways(n, 0);
+        
+        pq.emplace(0, 0); // (time, node)
+        dist[0] = 0;
+        ways[0] = 1;
 
-        return numWays;
+        while (!pq.empty()) {
+            auto [time, node] = pq.top(); pq.pop();
+            
+            if (time > dist[node]) continue; // Already found shorter path
+
+            for (auto& [nei, t] : graph[node]) {
+                long long newTime = time + t;
+
+                if (newTime < dist[nei]) {
+                    dist[nei] = newTime;
+                    ways[nei] = ways[node];
+                    pq.emplace(newTime, nei);
+                } else if (newTime == dist[nei]) {
+                    ways[nei] = (ways[nei] + ways[node]) % MOD;
+                }
+            }
+        }
+
+        return ways[n - 1];
     }
 };
 
