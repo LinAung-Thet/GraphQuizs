@@ -13,32 +13,40 @@ public:
     vector<int> minimumTime(int n, vector<vector<int>>& edges, vector<int>& disappear) {
         // Build the adjacency matrix which contains pairs of dest and time
         vector<vector<pair<int,int>>> graph(n);
-        for(vector edge: edges) {
-            graph[edge[0]].emplace_back(edge[1], edge[2]);
-            graph[edge[1]].emplace_back(edge[0], edge[2]);
+        for(auto& edge: edges) {
+            int u = edge[0], v = edge[1], length = edge[2];
+            graph[u].emplace_back(length, v);
+            graph[v].emplace_back(length, u);
         }
 
-        queue<pair<int,int>> q; // Queue of pair{dest,time}
-        q.emplace(0,0);   // Start from node 0;
-        vector<int> answers(n, -1);
+        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq; // Queue of pair{time, dest}
+        pq.emplace(0,0);   // Start from node 0;
+        vector<int> answers(n, INT_MAX);
+        answers[0] = 0;
 
         // Calculate the shortest path to each node using BFS
-        while(!q.empty()) {
-            auto [d,t] = q.front(); q.pop();
+        while(!pq.empty()) {
+            auto [t,d] = pq.top(); 
+            pq.pop();
 
             if(t >= disappear[d]) continue; // When the node d is reached, it already disappeared.
-            if(t > answers[d] && answers[d] >= 0) continue; // It's not the shortest path.
-            answers[d] = t;
+            if(t > answers[d]) continue;    // It's not the shortest path.
+            
 
             // Loop all the neighbours of d
-            for(auto [neiD, neiT]: graph[d]) {
+            for(auto& [neiT, neiD]: graph[d]) {
                 int nextT = t + neiT;
-                if (nextT < answers[neiD] || answers[neiD] < 0) {
-                    q.emplace(neiD, nextT); // Proceed to the node
+                if (nextT < answers[neiD] && nextT < disappear[neiD]) {
+                    answers[neiD] = nextT;
+                    pq.emplace(nextT, neiD); // Proceed to the node
                 }
             }
         }
 
+        for(int i=0; i<n; i++) {
+            if(answers[i] == INT_MAX)
+                answers[i] = -1;
+        }
         // Return the answer vector
         return answers;
     }
