@@ -5,67 +5,84 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <set>
+#include <chrono>
 
 using namespace std;
 class Solution {
 public:
-    int minimumCost(vector<int>& start, vector<int>& target, vector<vector<int>>& specialRoads) {
-        // Step 1: Filter out inefficient special roads
-        vector<vector<int>> filteredRoads;
-        for (auto& road : specialRoads) {
-            int a = road[0], b = road[1], c = road[2], d = road[3], cost = road[4];
-            int directCost = abs(a - c) + abs(b - d);
-            if (cost < directCost) {
-                filteredRoads.push_back({a, b, c, d, cost});
+    int minimumCost(vector<int>& start, vector<int>& target, vector<vector<int>>& specialRoadsRaw) {
+        // Lambda to calculate Manhattan distance
+        auto dist = [](pair<int, int> a, pair<int, int> b) {
+            return abs(a.first - b.first) + abs(a.second - b.second);
+        };
+
+        using pii = pair<int, int>;
+        using p3i = tuple<pii, pii, int>;
+
+        // Filter special roads where using them is cheaper than direct travel
+        vector<p3i> specialRoads;
+        for (auto& road : specialRoadsRaw) {
+            pii p1 = {road[0], road[1]}, p2 = {road[2], road[3]};
+            int cost = road[4];
+            if (dist(p1, p2) > cost) {
+                specialRoads.emplace_back(p1, p2, cost);
             }
         }
 
-        // Step 2: Distance map & priority queue
-        map<pair<int, int>, int> dist;
-        dist[{start[0], start[1]}] = 0;
+        // Priority queue for Dijkstra-style traversal
+        priority_queue<pair<int, pii>, vector<pair<int, pii>>, greater<>> heap;
+        set<pii> seen;
+        int mn = dist({start[0], start[1]}, {target[0], target[1]});
 
-        priority_queue<vector<int>, vector<vector<int>>, greater<vector<int>>> heap;
-        heap.push({0, start[0], start[1]});  // {currentCost, x, y}
+        heap.emplace(0, pii(start[0], start[1]));
 
-        // Step 3: Dijkstra-style exploration
         while (!heap.empty()) {
-            auto curr = heap.top();
-            heap.pop();
-            int currCost = curr[0], x = curr[1], y = curr[2];
+            auto [cost, pos] = heap.top(); heap.pop();
+            if (seen.count(pos) || cost > mn) continue;    
 
-            for (auto& road : filteredRoads) {
-                int a = road[0], b = road[1], c = road[2], d = road[3], specialCost = road[4];
-                int newCost = currCost + abs(x - a) + abs(y - b) + specialCost;
+            mn = min(mn, cost + dist(pos, {target[0], target[1]}));
+            seen.insert(pos);
 
-                if (!dist.count({c, d}) || newCost < dist[{c, d}]) {
-                    dist[{c, d}] = newCost;
-                    heap.push({newCost, c, d});
-                }
+            for (auto& [rdBeg, rdEnd, roadCost] : specialRoads) {
+                int nextCost = cost + roadCost + dist(pos, rdBeg);
+                heap.emplace(nextCost, rdEnd);
+                nextCost = nextCost;
             }
         }
 
-        // Step 4: Compare normal vs. special paths
-        int minCost = abs(target[0] - start[0]) + abs(target[1] - start[1]);
-        for (auto& road : filteredRoads) {
-            int c = road[2], d = road[3];
-            int costToTarget = abs(target[0] - c) + abs(target[1] - d);
-            if (dist.count({c, d})) {
-                minCost = min(minCost, dist[{c, d}] + costToTarget);
-            }
-        }
-
-        return minCost;
+        return mn;
     }
 };
 // Test cases
 int main() {
     Solution solution;
-    vector<int> start = {1, 1};
-    vector<int> target = {4, 5};
-    vector<vector<int>> specialRoads = {{1,2,3,3,2},{3,4,4,5,1}};
 
-    int result = solution.minimumCost(start, target, specialRoads);
-    cout << "Result: " << result << " , Expected: " << 5 << endl;
+    vector<int> start;
+    vector<int> target;
+    vector<vector<int>> specialRoads;
+    int result;
+
+    auto startTime = chrono::high_resolution_clock::now();
+
+    // // Test 1
+    // start = {1, 1};
+    // target = {4, 5};
+    // specialRoads = {{1,2,3,3,2},{3,4,4,5,1}};
+
+    // result = solution.minimumCost(start, target, specialRoads);
+    // cout << "Result: " << result << " , Expected: " << 5 << endl;
+
+    // Test 2
+    specialRoads = {{1,1,6,6,9}, {0,0,12,12,22}, {0,0,7,7,13}};
+    start = {0, 0};
+    target = {13, 13};
+    result = solution.minimumCost(start, target, specialRoads);
+    cout << "Result: " << result << " , Expected: " << 24 << endl;
+
+    auto endTime = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
+    cout << "Execution time: " << duration.count() << " microseconds" << endl;
 
     return 0;
 }
