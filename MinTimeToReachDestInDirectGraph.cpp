@@ -35,6 +35,7 @@ public:
             auto [curTime, curNode] = q.top();
             q.pop();
 
+            if (curNode == n - 1) return curTime;
             // If we have already found a better time for this node, skip it
             if(curTime >= minTimes[curNode]) continue;
             minTimes[curNode] = curTime;
@@ -53,8 +54,7 @@ public:
             }
         }
 
-        // If the last node's time is still INT_MAX, it means it's unreachable
-        return minTimes[n-1] == INT_MAX ? -1 : minTimes[n-1];
+        return -1;
     }
 };
 
