@@ -47,7 +47,6 @@ public:
             for (auto& [rdBeg, rdEnd, roadCost] : specialRoads) {
                 int nextCost = cost + roadCost + dist(pos, rdBeg);
                 heap.emplace(nextCost, rdEnd);
-                nextCost = nextCost;
             }
         }
 
@@ -65,13 +64,13 @@ int main() {
 
     auto startTime = chrono::high_resolution_clock::now();
 
-    // // Test 1
-    // start = {1, 1};
-    // target = {4, 5};
-    // specialRoads = {{1,2,3,3,2},{3,4,4,5,1}};
+    // Test 1
+    start = {1, 1};
+    target = {4, 5};
+    specialRoads = {{1,2,3,3,2},{3,4,4,5,1}};
 
-    // result = solution.minimumCost(start, target, specialRoads);
-    // cout << "Result: " << result << " , Expected: " << 5 << endl;
+    result = solution.minimumCost(start, target, specialRoads);
+    cout << "Result: " << result << " , Expected: " << 5 << endl;
 
     // Test 2
     specialRoads = {{1,1,6,6,9}, {0,0,12,12,22}, {0,0,7,7,13}};
