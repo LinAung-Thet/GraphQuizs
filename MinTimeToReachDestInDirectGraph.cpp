@@ -6,7 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include <utility>
-
+#include <windows.h>
 
 using namespace std;
 using namespace std::chrono;
@@ -18,13 +18,13 @@ public:
         if(edges.empty()) return -1; // If there are no edges, it's impossible to reach the destination
 
         // Build the adjacency matrix, each contains [v,start,end]
-        vector<vector<vector<int>>> graph(n);
+        vector<vector<tuple<int,int,int>>> graph(n);
         for(auto& edge: edges) {
             int u = edge[0],v = edge[1],s = edge[2],e = edge[3];
-            graph[u].push_back({v, s, e});
+            graph[u].emplace_back(v, s, e);
         }
 
-        queue<pair<int, int>> q; // [curTime, curNode]
+        priority_queue<pair<int, int>, vector<pair<int,int>>, greater<>> q; // [curTime, curNode]
         vector<int> minTimes(n, INT_MAX);
 
         // Starts from node 0 at time 0
@@ -32,23 +32,22 @@ public:
 
         // Find the shortest path
         while(!q.empty()){
-            auto& [curTime, curNode] = q.front();
+            auto [curTime, curNode] = q.top();
             q.pop();
 
-            int arrivalTime;
-            
-            for(auto& edge: graph[curNode]) {
-                int v = edge[0], s = edge[1], e = edge[2];
-                if(s <= curTime) arrivalTime = curTime;     // If start <= curr time, arrival time = curr time
-                else arrivalTime = curTime + (s-curTime);   // Otherwise, arrival time = curr time + (start - curr time)
+            // If we have already found a better time for this node, skip it
+            if(curTime >= minTimes[curNode]) continue;
+            minTimes[curNode] = curTime;
 
-                if(arrivalTime > e) continue;   // If the arrival time exceeds the end time, don't proceed
+            for(auto& [v,s,e]: graph[curNode]) {
+                int waitTime = max(curTime, s); // Wait until the start time if necessary
 
-                arrivalTime++; // add the transition time 1 sec
+                if(waitTime > e) continue;   // If the waiting time exceeds the end time, don't proceed
+
+                int arrivalTime = waitTime + 1; // add the transition time 1 sec
 
                 // If the arrival time is less than the recorded time for the node, add it to the queue
                 if(arrivalTime < minTimes[v]) {
-                    minTimes[v] = arrivalTime;
                     q.emplace(arrivalTime, v);
                 }
             }
@@ -61,6 +60,14 @@ public:
 
 // Test cases
 int main() {
+    // // Set the current process to high priority
+    // if (!SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS)) {
+    //     std::cerr << "Failed to set priority.\n";
+    //     return 1;
+    // }
+
+    // std::cout << "Process priority set to HIGH.\n";
+
     Solution solution;
 
     vector<vector<int>> edges;
@@ -103,6 +110,13 @@ int main() {
     n = 1;
     result = solution.minTime(n, edges);
     cout << "Minimum time to reach node " << n-1 << ": " << result << ", Expected: 0" << endl; // Expected output: Minimum time to reach node 4: 10
+
+    // Test case 5
+    edges = {{2,1,1,14},{0,2,15,16},{1,4,1,11},{1,4,4,25},
+             {0,2,17,21},{3,0,13,22},{3,2,15,18},{2,4,3,23},{1,3,11,12}};
+    n = 5;
+    result = solution.minTime(n, edges);
+    cout << "Minimum time to reach node " << n-1 << ": " << result << ", Expected: 17" << endl; // Expected output: Minimum time to reach node 4: 10
 
     auto endTime = high_resolution_clock::now();
     auto duration = duration_cast<chrono::microseconds>(endTime - startTime);
