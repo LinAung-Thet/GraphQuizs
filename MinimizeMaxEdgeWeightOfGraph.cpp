@@ -1,3 +1,5 @@
+// https://leetcode.com/problems/minimize-the-maximum-edge-weight-of-graph/description/?envType=problem-list-v2&envId=shortest-path
+
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -77,41 +79,41 @@ int main() {
 
     vector<vector<int>> edges;
     int n;
-    int distanceThreshold;
+    int outDegreeThreshold;
     int result;
 
     // Test case 1
     edges = {{1,0,1},{2,0,2},{3,0,1},{4,3,1},{2,1,1}};
     n = 5;
-    distanceThreshold = 2;
-    result = solution.minimumMaxWeight(n, distanceThreshold, edges);
+    outDegreeThreshold = 2;
+    result = solution.minimumMaxWeight(n, outDegreeThreshold, edges);
     cout << "Minimum max edge weight: " << result << ", Expected: 1" << endl; 
 
     // Test case 2
     edges = {{0,1,1},{0,2,2},{0,3,1},{0,4,1},{1,2,1},{1,4,1}};
     n = 5;
-    distanceThreshold = 1;
-    result = solution.minimumMaxWeight(n, distanceThreshold, edges);
+    outDegreeThreshold = 1;
+    result = solution.minimumMaxWeight(n, outDegreeThreshold, edges);
     cout << "Minimum max edge weight: " << result << ", Expected: -1" << endl; 
 
     // Test case 3
     edges = {{1,2,1},{1,3,3},{1,4,5},{2,3,2},{3,4,2},{4,0,1}};
     n = 5;
-    distanceThreshold = 1;
-    result = solution.minimumMaxWeight(n,distanceThreshold, edges);
+    outDegreeThreshold = 1;
+    result = solution.minimumMaxWeight(n,outDegreeThreshold, edges);
     cout << "Minimum max edge weight: " << result << ", Expected: 2" << endl; 
 
     // Test case 4
     edges = {{1,2,1},{1,3,3},{1,4,5},{2,3,2},{4,0,1}};
     n = 5;
-    distanceThreshold = 1;
-    result = solution.minimumMaxWeight(n,distanceThreshold, edges);
+    outDegreeThreshold = 1;
+    result = solution.minimumMaxWeight(n,outDegreeThreshold, edges);
     cout << "Minimum max edge weight: " << result << ", Expected: -1" << endl; 
 
     // Test case 5
     edges = {{2,0,39},{2,1,72},{2,3,67},{1,2,78},{3,0,10},{0,2,81}};
     n = 4;
-    distanceThreshold = 2;
-    result = solution.minimumMaxWeight(n,distanceThreshold, edges);
+    outDegreeThreshold = 2;
+    result = solution.minimumMaxWeight(n,outDegreeThreshold, edges);
     cout << "Minimum max edge weight: " << result << ", Expected: 78" << endl;
 }
