@@ -166,6 +166,13 @@ int main() {
     result = solution.findTheCity(n, edges, distanceThreshold);
     cout << "City with smallest neighbours: " << result << ", Expected: 33" << endl; // Expected output: City with smallest neighbours: 3
 
+    // Test case 5
+    edges = {{0,2,1},{2,5,2},{5,1,3},{1,3,6},{0,3,20}};
+    n = 6;
+    distanceThreshold = 100;
+    result = solution.findTheCity(n, edges, distanceThreshold);
+    cout << "City with smallest neighbours: " << result << ", Expected: 4" << endl; // Expected output: City with smallest neighbours: 3
+
     auto endTime = high_resolution_clock::now();
     auto duration = duration_cast<chrono::microseconds>(endTime - startTime);
     cout << "Execution time: " << duration.count() << " microseconds" << endl;
